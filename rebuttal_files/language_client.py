@@ -652,7 +652,7 @@ def main():
                 print(f"[SUMMARY {dset} | alpha={alpha}] TRAIN acc over clients: mean={mean_tr:.2f}% | min={min_tr:.2f}% | max={max_tr:.2f}%")
                 print(f"[SUMMARY {dset} | alpha={alpha}] TEST  acc over clients: mean={mean_te:.2f}% | min={min_te:.2f}% | max={max_te:.2f}%")
 
-    print("\n[DONE] Dense/CoBoost client heads saved under:", os.path.abspath("./oneshot_bench"))
+    print("\n[DONE] Dense/CoBoost client heads saved under:", os.path.abspath("../oneshot_bench"))
 
 
 

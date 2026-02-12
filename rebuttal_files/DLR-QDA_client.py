@@ -130,7 +130,7 @@ def main():
     print(f"[Client {args.client_id}] Extracting stats for {len(idx)} samples...")
     stats = extract_stats(model, loader, num_classes)
 
-    os.makedirs("client_stats", exist_ok=True)
+    os.makedirs("../client_stats", exist_ok=True)
     out = f"client_stats/client_{args.client_id}.pt"
     torch.save(stats, out)
     print(f"[Client {args.client_id}] Done. Saved to {out}")

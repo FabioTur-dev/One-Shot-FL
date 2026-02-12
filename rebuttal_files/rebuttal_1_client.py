@@ -33,7 +33,7 @@ from transformers import DistilBertTokenizerFast, DistilBertModel
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 DEV = torch.device(DEVICE)
 
-CLIENT_PATH = "./ghofl_stats/AGNEWS/client.pt"
+CLIENT_PATH = "../ghofl_stats/AGNEWS/client.pt"
 
 # Parametri RP
 FEAT_DIM = 768          # DistilBERT embedding size

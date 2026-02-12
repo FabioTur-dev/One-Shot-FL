@@ -412,7 +412,7 @@ def main():
 
     V32 = V64.to(torch.float32).to(DEV)
 
-    test = SVHN("./data", split="test", download=True, transform=test_tf)
+    test = SVHN("../data", split="test", download=True, transform=test_tf)
     test_dl = DataLoader(test,batch_size=256,shuffle=False)
 
     t0=time.time()

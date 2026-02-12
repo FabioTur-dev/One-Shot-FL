@@ -505,7 +505,7 @@ def main():
         transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
     ])
 
-    test_ds = SVHN("./data", split="test", download=True, transform=tform)
+    test_ds = SVHN("../data", split="test", download=True, transform=tform)
     test_dl = DataLoader(test_ds, batch_size=BATCH_TEST, shuffle=False)
 
     tot = 0

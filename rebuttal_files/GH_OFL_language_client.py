@@ -389,7 +389,7 @@ def main():
             print(f"[OK] {dset}/{MODEL_NAME} | client {i:02d} -> {out_path} | "
                   f"samples={payload['num_samples']}")
 
-    print("\n[DONE] GH-OFL NLP client stats saved under:", os.path.abspath("./oneshot_bench"))
+    print("\n[DONE] GH-OFL NLP client stats saved under:", os.path.abspath("../oneshot_bench"))
 
 
 if __name__ == "__main__":
