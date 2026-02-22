@@ -18,6 +18,8 @@ Turazza, Picone, Mamei.
 *The Gaussian-Head OFL Family: One-Shot Federated Learning from Client Global Statistics.*  
 ICLR 2026.
 
+<p align="center">📄 <a href="https://arxiv.org/abs/2602.01186"><b>Read the paper on arXiv (2602.01186)</b></a></p>
+
 ---
 
 # 🧠 Core Idea
