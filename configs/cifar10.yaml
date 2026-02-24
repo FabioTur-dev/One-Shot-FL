@@ -1,0 +1,14 @@
+dataset: cifar10
+num_classes: 10
+
+dirichlet_alpha: 0.1
+num_clients: 10
+
+feature_dim: 512
+image_size: 224
+
+lda_shrink: 0.05
+qda_shrink: 0.05
+
+fisher_energy: 0.99
+fisher_max_dim: 128

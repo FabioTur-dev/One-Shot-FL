@@ -1,0 +1,19 @@
+dataset: cifar100c
+base_dataset: cifar100   # train source
+
+dirichlet_alpha: 0.1
+num_clients: 10
+seed: 123
+
+data_root: ./data
+stats_root: ./client_stats_X
+
+lda_shrink: 0.05
+qda_shrink: 0.05
+
+fisher_energy: 0.99
+fisher_max_dim: 128
+
+# corruption settings
+corruption_type: gaussian_noise
+corruption_severity: 3
