@@ -19,6 +19,11 @@ Client-side:
 Supported backbones:
   resnet18, resnet50, mobilenet_v2, efficientnet_b0, vgg16
 
+CIFAR-100-C:
+  - TRUE legacy_holdout protocol
+  - Train stats from severities [1,2,3,4]
+  - All corruptions by default (unless specified)
+
 =====================================================================================
 """
 
@@ -42,17 +47,26 @@ from torchvision import datasets, transforms
 from models import build_backbone
 
 
-# -----------------------------------------------------------------------------
-# Constants
-# -----------------------------------------------------------------------------
+# =============================================================================
+# CONSTANTS
+# =============================================================================
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD  = (0.229, 0.224, 0.225)
 
+ALL_CORRUPTIONS = [
+    "brightness","contrast","defocus_blur","elastic_transform",
+    "fog","frost","gaussian_blur","gaussian_noise",
+    "glass_blur","impulse_noise","jpeg_compression",
+    "motion_blur","pixelate","saturate",
+    "shot_noise","snow","spatter",
+    "speckle_noise","zoom_blur"
+]
 
-# -----------------------------------------------------------------------------
-# Meta payload
-# -----------------------------------------------------------------------------
+
+# =============================================================================
+# META PAYLOAD
+# =============================================================================
 
 @dataclass
 class MetaInfo:
@@ -78,9 +92,9 @@ class MetaInfo:
     notes: str
 
 
-# -----------------------------------------------------------------------------
-# Reproducibility
-# -----------------------------------------------------------------------------
+# =============================================================================
+# REPRODUCIBILITY
+# =============================================================================
 
 def set_seed(seed: int) -> None:
     random.seed(seed)
@@ -92,9 +106,9 @@ def set_seed(seed: int) -> None:
     torch.backends.cudnn.benchmark = False
 
 
-# -----------------------------------------------------------------------------
-# Preprocessing
-# -----------------------------------------------------------------------------
+# =============================================================================
+# PREPROCESSING
+# =============================================================================
 
 def _resize_224():
     try:
@@ -111,9 +125,54 @@ def build_transform() -> transforms.Compose:
     ])
 
 
-# -----------------------------------------------------------------------------
-# Dataset helpers
-# -----------------------------------------------------------------------------
+# =============================================================================
+# CIFAR-100-C DATASET
+# =============================================================================
+
+class CIFAR100CSubset(torch.utils.data.Dataset):
+
+    def __init__(self, root, corruptions, severities, transform):
+        self.root = root
+        self.transform = transform
+        self.labels_all = np.load(os.path.join(root, "labels.npy"))
+        self.items = []
+        self.cache = {}
+
+        for corr in corruptions:
+            arr = np.load(os.path.join(root, f"{corr}.npy"), mmap_mode="r")
+            for s in severities:
+                lo = (s - 1) * 10000
+                hi = s * 10000
+                for p in range(lo, hi):
+                    self.items.append((corr, p))
+
+    def __len__(self):
+        return len(self.items)
+
+    def _get(self, c):
+        if c not in self.cache:
+            self.cache[c] = np.load(
+                os.path.join(self.root, f"{c}.npy"),
+                mmap_mode="r"
+            )
+        return self.cache[c]
+
+    def __getitem__(self, idx):
+        from PIL import Image
+        corr, p = self.items[idx]
+        img = self._get(corr)[p]
+        img = Image.fromarray(np.array(img))
+
+        if self.transform:
+            img = self.transform(img)
+
+        y = int(self.labels_all[p])
+        return img, y
+
+
+# =============================================================================
+# CLEAN DATASETS
+# =============================================================================
 
 def load_train_dataset(dataset_name: str, data_root: str, tfm):
     dataset_name = dataset_name.lower()
@@ -144,9 +203,9 @@ def get_labels(ds, dataset_name: str) -> List[int]:
     return y.tolist()
 
 
-# -----------------------------------------------------------------------------
-# Dirichlet split
-# -----------------------------------------------------------------------------
+# =============================================================================
+# DIRICHLET SPLIT
+# =============================================================================
 
 def dirichlet_split(
     labels: List[int],
@@ -191,9 +250,9 @@ def dirichlet_split(
     return per_client
 
 
-# -----------------------------------------------------------------------------
-# Stats aggregation
-# -----------------------------------------------------------------------------
+# =============================================================================
+# STATS AGGREGATION
+# =============================================================================
 
 @torch.no_grad()
 def aggregate_client_stats_x(
@@ -246,9 +305,9 @@ def aggregate_client_stats_x(
     }
 
 
-# -----------------------------------------------------------------------------
-# Config
-# -----------------------------------------------------------------------------
+# =============================================================================
+# CONFIG
+# =============================================================================
 
 def load_yaml(path: str) -> Dict:
     with open(path, "r", encoding="utf-8") as f:
@@ -260,9 +319,9 @@ def format_alpha(alpha: float) -> str:
     return s.replace(".", "p")
 
 
-# -----------------------------------------------------------------------------
-# Main
-# -----------------------------------------------------------------------------
+# =============================================================================
+# MAIN
+# =============================================================================
 
 def main() -> None:
 
@@ -290,19 +349,35 @@ def main() -> None:
 
     tfm = build_transform()
 
-    # ------------------------------------------------------------------
-    # CIFAR-100-C robustness protocol
-    # Train statistics MUST come from clean CIFAR-100 train split
-    # ------------------------------------------------------------------
-    train_dataset_name = "cifar100" if dataset_name == "cifar100c" else dataset_name
+    # =====================================================================
+    # DATASET LOADING (MODIFIED FOR CIFAR-100-C LEGACY HOLDOUT)
+    # =====================================================================
 
-    ds, num_classes = load_train_dataset(
-        train_dataset_name,
-        data_root,
-        tfm
-    )
+    if dataset_name == "cifar100c":
 
-    labels = get_labels(ds, train_dataset_name)
+        cifar100c_dir = os.path.join(data_root, "CIFAR-100-C")
+        severities = cfg.get("severities_train", [1, 2, 3, 4])
+        corruptions = cfg.get("corruptions_train", ALL_CORRUPTIONS)
+
+        ds = CIFAR100CSubset(
+            cifar100c_dir,
+            corruptions,
+            severities,
+            tfm
+        )
+
+        labels = [ds.labels_all[p] for (_, p) in ds.items]
+        num_classes = 100
+
+    else:
+
+        ds, num_classes = load_train_dataset(
+            dataset_name,
+            data_root,
+            tfm
+        )
+
+        labels = get_labels(ds, dataset_name)
 
     # Backbone
     model, feature_dim, weights_tag = build_backbone(backbone_name, device)

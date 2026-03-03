@@ -918,37 +918,57 @@ def main() -> None:
     alpha_tag = format_alpha(alpha)
 
     if dataset_name == "cifar100c":
-        mode = str(cfg.get("cifar100c_mode", "legacy_holdout")).upper()
-        backbone_folder = cfg.get("cifar100c_backbone_dir", "resnet18-IMAGENET1K_V1")
-        stats_dir = cfg.get("cifar100c_stats_dir", f"./client_stats/CIFAR100C_{mode}/{backbone_folder}")
-        stats_dir = os.path.abspath(stats_dir)
 
-        print(f"[INFO] CIFAR100C mode detected : {mode}")
-        print(f"[INFO] CIFAR100C stats folder  : {stats_dir}")
+        base_dir = os.path.join(stats_root, "CIFAR100C")
 
-        if not os.path.isdir(stats_dir):
-            raise RuntimeError(f"[CIFAR100C] stats folder not found:\n{stats_dir}")
+        if not os.path.isdir(base_dir):
+            raise RuntimeError(f"CIFAR100C stats folder not found: {base_dir}")
 
+        cand = sorted(glob.glob(os.path.join(base_dir, f"*_TRAIN_A{alpha_tag}_X*")))
+
+        if not cand:
+            raise RuntimeError(
+                f"No CIFAR100C stats folder found under {base_dir} matching *_TRAIN_A{alpha_tag}_X*"
+            )
+
+        if backbone_cfg is not None:
+            cand = [
+                d for d in cand
+                if os.path.basename(d).lower().startswith(backbone_cfg + "-")
+            ]
+            if not cand:
+                raise RuntimeError(f"No CIFAR100C stats folder for backbone={backbone_cfg}")
+
+        stats_dir = cand[0]
         paths = list_client_files(stats_dir)
+
         if len(paths) == 0:
-            raise RuntimeError(f"[CIFAR100C] No client_*.pt files found in:\n{stats_dir}")
+            raise RuntimeError(f"No client_*.pt found in: {stats_dir}")
 
     else:
         base_dir = os.path.join(stats_root, dataset_name.upper())
+
         if not os.path.isdir(base_dir):
             raise RuntimeError(f"Dataset stats folder not found: {base_dir}")
 
         cand = sorted(glob.glob(os.path.join(base_dir, f"*_TRAIN_A{alpha_tag}_X*")))
+
         if not cand:
-            raise RuntimeError(f"No stats folder found under {base_dir} matching *_TRAIN_A{alpha_tag}_X*")
+            raise RuntimeError(
+                f"No stats folder found under {base_dir} matching *_TRAIN_A{alpha_tag}_X*"
+            )
 
         if backbone_cfg is not None:
-            cand = [d for d in cand if os.path.basename(d).lower().startswith(backbone_cfg + "-")]
+            cand = [
+                d for d in cand
+                if os.path.basename(d).lower().startswith(backbone_cfg + "-")
+            ]
             if not cand:
                 raise RuntimeError(f"No stats folder for backbone={backbone_cfg}")
 
         stats_dir = cand[0]
         paths = list_client_files(stats_dir)
+
         if len(paths) == 0:
             raise RuntimeError(f"No client_*.pt found in: {stats_dir}")
 
