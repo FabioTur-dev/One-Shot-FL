@@ -1,19 +1,50 @@
 dataset: cifar100c
-base_dataset: cifar100   # train source
 
-dirichlet_alpha: 0.1
+# MUST MATCH CLIENT META
+cifar100c_mode: holdout
+
+# solo per logging (non influisce sulle stats già salvate)
 num_clients: 10
-seed: 123
+dirichlet_alpha: 0.5
+
+backbone: resnet18
+seed: 42
 
 data_root: ./data
-stats_root: ./client_stats_X
+stats_root: ./client_stats/CIFAR100C_LEGACY_HOLDOUT
 
+# Evaluation
+test_batch: 256
+num_workers: 4
+corruption_severities: [5]
+
+# Gaussian
 lda_shrink: 0.05
-qda_shrink: 0.05
+qda_shrink: 0.07
 
-fisher_energy: 0.99
+# Fisher
+fisher_energy: 0.995
 fisher_max_dim: 128
 
-# corruption settings
-corruption_type: gaussian_noise
-corruption_severity: 3
+# Synthetic
+syn_ns_per_class: 3000
+syn_tau_base: 0.85
+syn_shrink: 0.07
+syn_use_class_cov: true
+
+# FisherMix
+fm_epochs: 20
+fm_batch: 8192
+fm_lr: 0.001
+fm_wd: 0.0002
+
+# Proto-Hyper
+ph_epochs: 20
+ph_batch: 8192
+ph_lr: 0.001
+ph_wd: 0.0005
+ph_rank: 128
+
+kd_alpha: 0.5
+kd_T: 2.0
+teacher_blend: 0.7

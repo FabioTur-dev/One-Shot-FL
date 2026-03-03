@@ -237,7 +237,7 @@ class CIFAR100C_Test(torch.utils.data.Dataset):
         arr = self._get_arr(c)
 
         img_np = arr[p].copy()
-        img = torch.from_numpy(img_np).permute(2, 0, 1).float() / 255.0
+        img = torch.from_numpy(img_np).permute(2, 0, 1).contiguous().float() / 255.0
 
         if self.transform is not None:
             img = self.transform(img)
@@ -872,6 +872,12 @@ def evaluate_streaming(
 
         # Feature extraction (x-space)
         with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=(device.type == "cuda")):
+            # ------------------------------------------------------------
+            # CIFAR-100-C "codice buono": resize in eval, non nel transform
+            # ------------------------------------------------------------
+            if dataset_name.lower() == "cifar100c":
+                imgs = F.interpolate(imgs, size=224, mode="bilinear", align_corners=False)
+
             x32 = fe(imgs).to(torch.float32)  # [B,512]
 
         B = x32.size(0)
@@ -981,6 +987,17 @@ def main() -> None:
     num_workers = int(cfg.get("num_workers", 2 if is_win else 4))
 
     tfm = build_transform()
+
+    # ------------------------------------------------------------
+    # CIFAR-100-C: dataset già ritorna Tensor float in [0,1]
+    # => NON usare ToTensor() (evita doppio-scaling / type issues)
+    # Struttura identica al tuo "codice buono" CIFAR-100-C.
+    # ------------------------------------------------------------
+    if dataset_name.lower() == "cifar100c":
+        tfm = transforms.Compose([
+            transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+        ])
+
     testset, num_classes = load_test_dataset(dataset_name, data_root, tfm, cfg)
 
     # Stats directory matches client naming

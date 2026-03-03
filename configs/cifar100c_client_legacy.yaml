@@ -1,0 +1,24 @@
+dataset: cifar100c
+
+# federated split
+num_clients: 10
+dirichlet_alpha: 0.5   # ← IMPORTANTISSIMO (legacy era 0.5)
+
+seed: 42
+batch_size: 512
+
+# paths
+data_root: ./data
+
+# legacy CIFAR100C holdout setup
+cifar100c_dir: ./data/CIFAR-100-C
+
+# TRAIN corruptions (legacy protocol)
+severities_train: [1,2,3,4]
+
+# opzionale (default = tutte)
+# corruptions_included:
+#   - gaussian_noise
+#   - motion_blur
+
+num_workers: 4
