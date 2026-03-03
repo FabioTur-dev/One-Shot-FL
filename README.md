@@ -146,19 +146,19 @@ This uses the camera-ready client:
 ### CIFAR-10
 
 ```bash
-python -m client.run_client --config configs/cifar10.yaml
+python -m client.run_client_backbones --config configs/cifar10.yaml
 ```
 
 ### CIFAR-100
 
 ```bash
-python -m client.run_client --config configs/cifar100.yaml
+python -m client.run_client_backbones --config configs/cifar100.yaml
 ```
 
 ### SVHN
 
 ```bash
-python -m client.run_client --config configs/svhn.yaml
+python -m client.run_client_backbones --config configs/svhn.yaml
 ```
 
 ---
