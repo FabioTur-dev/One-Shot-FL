@@ -88,7 +88,7 @@ Inference uses only the student.
 GH-OFL/
 │
 ├── client/
-│   └── run_client.py
+│   └── run_client_backbones.py
 │
 ├── server/
 │   ├── GH_OFL_server.py
